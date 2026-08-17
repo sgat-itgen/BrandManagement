@@ -31,7 +31,9 @@ export function KpiGrid({ stats }: { stats: Stats }) {
 
 export function AnalyticsRow({ brands, stats }: { brands: BrandRecord[]; stats: Stats }) {
   const maxCompany = Math.max(...Object.values(stats.byCompany), 1)
-  const agencies = Object.entries(stats.byAgency).sort((a, b) => b[1] - a[1]).slice(0, 7)
+  const agencies = Object.entries(stats.byAgency)
+    .map(([agency, count]) => [agency || 'Chưa xác định', count] as const)
+    .sort((a, b) => b[1] - a[1])
 
   return (
     <section className="mb-5 grid gap-3 xl:grid-cols-[1.1fr_1fr_1fr]">
@@ -63,11 +65,16 @@ export function AnalyticsRow({ brands, stats }: { brands: BrandRecord[]; stats: 
         </div>
       </Panel>
       <Panel title="Theo đơn vị đại diện SHTT">
-        <div className="divide-y divide-dashed divide-border">
+        <div>
           {agencies.map(([agency, count]) => (
-            <div key={agency} className="flex items-center justify-between gap-3 py-1.5 text-[12.5px]">
-              <span className="font-semibold text-brown-800">{agency || 'Chưa xác định'}</span>
-              <span className="rounded-full bg-brown-800 px-2.5 py-0.5 text-[11.5px] font-bold text-white">{count}</span>
+            <div
+              key={agency}
+              className="flex items-center justify-between gap-3 border-b border-dashed border-border py-[7px] text-[12.5px] last:border-b-0"
+            >
+              <span className="font-semibold text-brown-800">{agency}</span>
+              <span className="rounded-full bg-brown-800 px-2.5 py-0.5 text-[11.5px] font-bold text-white">
+                {count}
+              </span>
             </div>
           ))}
         </div>

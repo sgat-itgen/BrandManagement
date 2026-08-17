@@ -45,7 +45,12 @@ export function BrandModal({
           <DetailForm brand={brand} mutations={mutations} onClose={onClose} />
         ) : null}
         {modal.mode === 'add' ? (
-          <AddBrandForm company={modal.company} onClose={onClose} createBrand={mutations.createBrand.mutateAsync} />
+          <AddBrandForm
+            company={modal.company}
+            onClose={onClose}
+            createBrand={mutations.createBrand.mutateAsync}
+            updateLogo={mutations.updateLogo.mutateAsync}
+          />
         ) : null}
         {modal.mode === 'password' ? <PasswordForm onClose={onClose} /> : null}
         {modal.mode === 'manage-companies' ? <CompanyManagement brands={brands} /> : null}
@@ -253,10 +258,12 @@ function AddBrandForm({
   company,
   createBrand,
   onClose,
+  updateLogo,
 }: {
   company: CompanyCode
   createBrand: (input: NewBrandInput) => Promise<BrandRecord>
   onClose: () => void
+  updateLogo: ({ id, file }: { id: number; file: File | null }) => Promise<unknown>
 }) {
   const [form, setForm] = useState<NewBrandInput>({
     company,
@@ -271,13 +278,26 @@ function AddBrandForm({
     agency: '',
     note: '',
   })
+  const [logoFile, setLogoFile] = useState<File | null>(null)
+  const [logoPreview, setLogoPreview] = useState('')
 
   const update = (patch: Partial<NewBrandInput>) => setForm((current) => ({ ...current, ...patch }))
 
   const save = async () => {
     if (!form.mark.trim()) return
-    await createBrand(form)
+    const created = await createBrand(form)
+    if (logoFile) {
+      await updateLogo({ id: created.id, file: logoFile })
+    }
     onClose()
+  }
+
+  const handleLogoSelect = (event: ChangeEvent<HTMLInputElement>) => {
+    const file = event.target.files?.[0]
+    if (!file) return
+    setLogoFile(file)
+    setLogoPreview(URL.createObjectURL(file))
+    event.target.value = ''
   }
 
   return (
@@ -294,6 +314,40 @@ function AddBrandForm({
       <Field label="Tên / mô tả nhãn hiệu *">
         <input value={form.mark} onChange={(event) => update({ mark: event.target.value })} className="field-input" placeholder="vd: Tên thương hiệu mới" />
       </Field>
+      <Field label="Ảnh logo">
+        <div className="flex flex-wrap items-center gap-3">
+          {logoPreview ? (
+            <img
+              src={logoPreview}
+              alt=""
+              className="h-22.5 w-30 rounded-lg border border-border bg-cream object-contain"
+            />
+          ) : (
+            <div className="grid h-22.5 w-30 place-items-center rounded-lg border border-dashed border-border bg-cream px-2 text-center text-[11px] text-muted">
+              Chưa có ảnh
+            </div>
+          )}
+          <label className="inline-flex cursor-pointer items-center gap-2 rounded-lg border border-border px-3 py-2 text-xs font-semibold text-brown-800 hover:bg-cream">
+            <Upload size={15} />
+            Tải ảnh logo
+            <input className="hidden" type="file" accept="image/*" onChange={handleLogoSelect} />
+          </label>
+          {logoPreview ? (
+            <button
+              onClick={() => {
+                setLogoFile(null)
+                setLogoPreview('')
+              }}
+              className="inline-flex items-center gap-2 rounded-lg border border-status-red/35 px-3 py-2 text-xs font-semibold text-status-red hover:bg-status-red-bg"
+              type="button"
+            >
+              <Trash2 size={15} />
+              Xóa ảnh
+            </button>
+          ) : null}
+        </div>
+      </Field>
+      <hr className="border-border" />
       <div className="grid gap-3 sm:grid-cols-2">
         <Field label="Loại nhãn hiệu">
           <input value={form.type} onChange={(event) => update({ type: event.target.value })} className="field-input" />
