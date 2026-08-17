@@ -8,6 +8,8 @@ export type ModalIntent =
   | { mode: 'detail'; brandId: number }
   | { mode: 'add'; company: CompanyCode }
   | { mode: 'password' }
+  | { mode: 'manage-companies' }
+  | { mode: 'manage-agencies' }
 
 export function CardView({
   groups,

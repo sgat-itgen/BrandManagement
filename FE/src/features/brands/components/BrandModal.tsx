@@ -20,9 +20,12 @@ export function BrandModal({
   onClose: () => void
 }) {
   const mutations = useBrandMutations()
-  const brand = modal?.mode === 'detail' ? brands.find((item) => item.id === modal.brandId) : null
+  const brand = modal?.mode === 'detail' ? (brands.find((item) => item.id === modal.brandId) ?? null) : null
 
   if (!modal) return null
+
+  const title = getModalTitle(modal, brand)
+  const subtitle = getModalSubtitle(modal, brand)
 
   return (
     <div className="fixed inset-0 z-50 grid place-items-center bg-brown-900/45 p-5" onClick={onClose}>
@@ -30,17 +33,9 @@ export function BrandModal({
         <div className="sticky top-0 flex items-start justify-between gap-3 rounded-t-2xl border-b border-border bg-white px-6 py-5">
           <div>
             <h2 className="text-base font-bold text-brown-900">
-              {modal.mode === 'add' ? 'Thêm thương hiệu mới' : modal.mode === 'password' ? 'Đổi mật khẩu' : brand?.mark}
+              {title}
             </h2>
-            <p className="mt-1 text-xs text-muted">
-              {modal.mode === 'add'
-                ? COMPANY_LABEL[modal.company]
-                : modal.mode === 'password'
-                  ? 'Mô phỏng form đổi mật khẩu theo prototype'
-                  : brand
-                    ? `${COMPANY_LABEL[brand.company]} · Nhóm ${compact(brand.groups)}`
-                    : ''}
-            </p>
+            <p className="mt-1 text-xs text-muted">{subtitle}</p>
           </div>
           <button className="text-muted hover:text-brown-900" onClick={onClose} type="button" aria-label="Đóng">
             <X size={20} />
@@ -53,9 +48,27 @@ export function BrandModal({
           <AddBrandForm company={modal.company} onClose={onClose} createBrand={mutations.createBrand.mutateAsync} />
         ) : null}
         {modal.mode === 'password' ? <PasswordForm onClose={onClose} /> : null}
+        {modal.mode === 'manage-companies' ? <CompanyManagement brands={brands} /> : null}
+        {modal.mode === 'manage-agencies' ? <AgencyManagement brands={brands} /> : null}
       </div>
     </div>
   )
+}
+
+function getModalTitle(modal: Exclude<ModalState, null>, brand: BrandRecord | null) {
+  if (modal.mode === 'add') return 'Thêm thương hiệu mới'
+  if (modal.mode === 'password') return 'Đổi mật khẩu'
+  if (modal.mode === 'manage-companies') return 'Quản lý pháp nhân'
+  if (modal.mode === 'manage-agencies') return 'Quản lý đại diện SHTT'
+  return brand?.mark ?? 'Chi tiết nhãn hiệu'
+}
+
+function getModalSubtitle(modal: Exclude<ModalState, null>, brand: BrandRecord | null) {
+  if (modal.mode === 'add') return COMPANY_LABEL[modal.company]
+  if (modal.mode === 'password') return 'Mô phỏng form đổi mật khẩu theo prototype'
+  if (modal.mode === 'manage-companies') return 'Danh mục pháp nhân đang có hồ sơ nhãn hiệu'
+  if (modal.mode === 'manage-agencies') return 'Danh mục đơn vị đại diện SHTT theo dữ liệu hiện tại'
+  return brand ? `${COMPANY_LABEL[brand.company]} · Nhóm ${compact(brand.groups)}` : ''
 }
 
 function DetailForm({
@@ -155,26 +168,32 @@ function DetailForm({
         </Field>
       </div>
 
-      <div className="mt-4 flex items-center justify-between">
-        {brand.isCustom ? (
+      <div className="mt-4 flex flex-wrap items-center justify-between gap-2">
+        <button
+          onClick={async () => {
+            await mutations.deleteBrand.mutateAsync(brand.id)
+            onClose()
+          }}
+          className="inline-flex items-center gap-2 rounded-lg border border-status-red/35 px-3 py-2 text-xs font-semibold text-status-red hover:bg-status-red-bg"
+          type="button"
+        >
+          <Trash2 size={15} />
+          Xóa thương hiệu
+        </button>
+        <div className="ml-auto flex flex-wrap items-center justify-end gap-2">
           <button
-            onClick={async () => {
-              await mutations.deleteBrand.mutateAsync(brand.id)
-              onClose()
-            }}
-            className="inline-flex items-center gap-2 rounded-lg border border-status-red/35 px-3 py-2 text-xs font-semibold text-status-red hover:bg-status-red-bg"
+            onClick={onClose}
+            className="inline-flex items-center gap-2 rounded-lg border border-border px-4 py-2 text-sm font-bold text-brown-800 hover:bg-cream"
             type="button"
           >
-            <Trash2 size={15} />
-            Xóa vĩnh viễn
+            <X size={16} />
+            Bỏ chỉnh sửa
           </button>
-        ) : (
-          <span />
-        )}
-        <button onClick={save} className="inline-flex items-center gap-2 rounded-lg bg-brown-800 px-4 py-2 text-sm font-bold text-white hover:bg-brown-900" type="button">
-          <Save size={16} />
-          Lưu thay đổi
-        </button>
+          <button onClick={save} className="inline-flex items-center gap-2 rounded-lg bg-brown-800 px-4 py-2 text-sm font-bold text-white hover:bg-brown-900" type="button">
+            <Save size={16} />
+            Lưu thay đổi
+          </button>
+        </div>
       </div>
     </div>
   )
@@ -337,6 +356,180 @@ function PasswordForm({ onClose }: { onClose: () => void }) {
           Đổi mật khẩu
         </button>
       </div>
+    </div>
+  )
+}
+
+function CompanyManagement({ brands }: { brands: BrandRecord[] }) {
+  const [companies, setCompanies] = useState<Array<{ id: string; code: string; name: string }>>(() =>
+    COMPANY_ORDER.map((company) => ({
+      id: company,
+      code: company,
+      name: COMPANY_LABEL[company],
+    })),
+  )
+  const [newCompanyCode, setNewCompanyCode] = useState('')
+  const [newCompanyName, setNewCompanyName] = useState('')
+
+  const updateCompany = (id: string, patch: Partial<{ code: string; name: string }>) => {
+    setCompanies((current) =>
+      current.map((company) => (company.id === id ? { ...company, ...patch } : company)),
+    )
+  }
+
+  const addCompany = () => {
+    const code = newCompanyCode.trim().toUpperCase()
+    const name = newCompanyName.trim()
+    if (!code || !name || companies.some((company) => company.code === code)) return
+
+    setCompanies((current) => [...current, { id: `custom-${Date.now()}`, code, name }])
+    setNewCompanyCode('')
+    setNewCompanyName('')
+  }
+
+  return (
+    <div className="px-6 py-5">
+      <div className="mb-4 grid gap-2 rounded-xl border border-border bg-cream/70 p-3 sm:grid-cols-[120px_1fr_auto]">
+        <input
+          value={newCompanyCode}
+          onChange={(event) => setNewCompanyCode(event.target.value)}
+          className="field-input"
+          placeholder="Mã"
+        />
+        <input
+          value={newCompanyName}
+          onChange={(event) => setNewCompanyName(event.target.value)}
+          className="field-input"
+          placeholder="Tên pháp nhân"
+        />
+        <button
+          onClick={addCompany}
+          className="inline-flex items-center justify-center gap-2 rounded-lg bg-brown-800 px-3 py-2 text-xs font-bold text-white hover:bg-brown-900"
+          type="button"
+        >
+          <Plus size={15} />
+          Thêm
+        </button>
+      </div>
+      <div className="overflow-hidden rounded-xl border border-border">
+        <table className="w-full border-collapse text-[12.5px]">
+          <thead className="bg-brown-800 text-left text-[11px] uppercase tracking-wide text-white">
+            <tr>
+              <th className="px-3 py-3 font-bold">Mã</th>
+              <th className="px-3 py-3 font-bold">Pháp nhân</th>
+              <th className="px-3 py-3 text-right font-bold">Số hồ sơ</th>
+            </tr>
+          </thead>
+          <tbody>
+            {companies.map((company) => (
+              <tr key={company.id} className="border-b border-border last:border-b-0">
+                <td className="px-3 py-3">
+                  <input
+                    value={company.code}
+                    onChange={(event) => updateCompany(company.id, { code: event.target.value.toUpperCase() })}
+                    className="field-input font-bold text-brown-900"
+                  />
+                </td>
+                <td className="px-3 py-3">
+                  <input
+                    value={company.name}
+                    onChange={(event) => updateCompany(company.id, { name: event.target.value })}
+                    className="field-input text-brown-800"
+                  />
+                </td>
+                <td className="px-3 py-3 text-right font-bold text-brown-900">
+                  <span className="mr-3">
+                    {brands.filter((brand) => brand.company === company.code).length}
+                  </span>
+                  <button
+                    onClick={() => setCompanies((current) => current.filter((item) => item.id !== company.id))}
+                    className="inline-flex items-center gap-1 rounded-md border border-status-red/35 px-2 py-1 text-[11px] font-bold text-status-red hover:bg-status-red-bg"
+                    type="button"
+                  >
+                    <Trash2 size={13} />
+                    Xóa
+                  </button>
+                </td>
+              </tr>
+            ))}
+          </tbody>
+        </table>
+      </div>
+      <p className="mt-3 text-[11.5px] text-muted">
+        Thêm/sửa/xóa trong popup là demo cục bộ cho danh mục. Khi có backend thật, CRUD pháp nhân nên đi qua API riêng.
+      </p>
+    </div>
+  )
+}
+
+function AgencyManagement({ brands }: { brands: BrandRecord[] }) {
+  const [agencies, setAgencies] = useState(() =>
+    [...new Set(brands.map((brand) => brand.agency || 'Chưa xác định'))]
+      .sort()
+      .map((name) => ({ id: name, name })),
+  )
+  const [newAgencyName, setNewAgencyName] = useState('')
+
+  const addAgency = () => {
+    const name = newAgencyName.trim()
+    if (!name || agencies.some((agency) => agency.name === name)) return
+
+    setAgencies((current) => [...current, { id: `custom-${Date.now()}`, name }])
+    setNewAgencyName('')
+  }
+
+  return (
+    <div className="px-6 py-5">
+      <div className="mb-4 grid gap-2 rounded-xl border border-border bg-cream/70 p-3 sm:grid-cols-[1fr_auto]">
+        <input
+          value={newAgencyName}
+          onChange={(event) => setNewAgencyName(event.target.value)}
+          className="field-input"
+          placeholder="Tên đơn vị đại diện SHTT"
+        />
+        <button
+          onClick={addAgency}
+          className="inline-flex items-center justify-center gap-2 rounded-lg bg-brown-800 px-3 py-2 text-xs font-bold text-white hover:bg-brown-900"
+          type="button"
+        >
+          <Plus size={15} />
+          Thêm
+        </button>
+      </div>
+      <div className="space-y-2">
+        {agencies.map((agency) => (
+          <div
+            key={agency.id}
+            className="grid items-center gap-2 rounded-xl border border-border bg-cream/70 px-4 py-3 text-[12.5px] sm:grid-cols-[1fr_auto_auto]"
+          >
+            <input
+              value={agency.name}
+              onChange={(event) =>
+                setAgencies((current) =>
+                  current.map((item) =>
+                    item.id === agency.id ? { ...item, name: event.target.value } : item,
+                  ),
+                )
+              }
+              className="field-input font-semibold text-brown-800"
+            />
+            <span className="rounded-full bg-brown-800 px-2.5 py-0.5 text-[11.5px] font-bold text-white">
+              {brands.filter((brand) => (brand.agency || 'Chưa xác định') === agency.name).length}
+            </span>
+            <button
+              onClick={() => setAgencies((current) => current.filter((item) => item.id !== agency.id))}
+              className="inline-flex items-center justify-center gap-1 rounded-md border border-status-red/35 px-2 py-1 text-[11px] font-bold text-status-red hover:bg-status-red-bg"
+              type="button"
+            >
+              <Trash2 size={13} />
+              Xóa
+            </button>
+          </div>
+        ))}
+      </div>
+      <p className="mt-3 text-[11.5px] text-muted">
+        Thêm/sửa/xóa trong popup là demo cục bộ cho danh mục. Khi có backend thật, quản lý đại diện SHTT nên tách thành API danh mục riêng.
+      </p>
     </div>
   )
 }

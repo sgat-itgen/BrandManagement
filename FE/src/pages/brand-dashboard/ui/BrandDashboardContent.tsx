@@ -1,32 +1,23 @@
 import { useMemo, useState } from 'react'
-import { LoginScreen } from '../../../features/auth/components/LoginScreen'
-import { useCurrentUser, useLogout } from '../../../features/auth/hooks/useAuth'
 import { emptyFilters, type Filters, type ViewMode } from '../../../features/brands/constants'
 import { useBrands } from '../../../features/brands/hooks/useBrands'
-import { exportCSV, exportJSON, filterBrands, getFilterOptions, getStats, groupByCompany, } from '../../../features/brands/utils'
+import {
+  exportCSV,
+  exportJSON,
+  filterBrands,
+  getFilterOptions,
+  getRenewalReviewItems,
+  getStats,
+  groupByCompany,
+} from '../../../features/brands/utils'
 import { AnalyticsRow, KpiGrid } from '../../../features/brands/components/DashboardAnalytics'
 import { BrandFilters } from '../../../features/brands/components/BrandFilters'
 import { BrandModal, type ModalState } from '../../../features/brands/components/BrandModal'
 import { CardView, TableView } from '../../../features/brands/components/BrandViews'
 import { DashboardHeader } from '../../../features/brands/components/DashboardHeader'
+import { RenewalReviewSection } from '../../../features/brands/components/RenewalReviewSection'
 
-export function BrandDashboardPage() {
-  const { data: user } = useCurrentUser()
-  const logoutMutation = useLogout()
-
-  if (!user) {
-    return <LoginScreen />
-  }
-
-  return (
-    <DashboardContent
-      userLabel={`${user.name} · ${user.email}`}
-      onLogout={() => logoutMutation.mutate()}
-    />
-  )
-}
-
-function DashboardContent({
+export function BrandDashboardContent({
   userLabel,
   onLogout,
 }: {
@@ -42,6 +33,7 @@ function DashboardContent({
   const options = useMemo(() => getFilterOptions(brands), [brands])
   const stats = useMemo(() => getStats(brands), [brands])
   const companyGroups = useMemo(() => groupByCompany(filtered), [filtered])
+  const renewalReviewItems = useMemo(() => getRenewalReviewItems(brands), [brands])
 
   return (
     <main className="min-h-screen bg-cream text-sm text-brand-text">
@@ -52,10 +44,16 @@ function DashboardContent({
           onOpenPassword={() => setModal({ mode: 'password' })}
           onExportJSON={() => exportJSON(brands)}
           onExportCSV={() => exportCSV(brands)}
+          onManageCompanies={() => setModal({ mode: 'manage-companies' })}
+          onManageAgencies={() => setModal({ mode: 'manage-agencies' })}
         />
 
         <KpiGrid stats={stats} />
         <AnalyticsRow brands={brands} stats={stats} />
+        <RenewalReviewSection
+          items={renewalReviewItems}
+          onOpenBrand={(brandId) => setModal({ mode: 'detail', brandId })}
+        />
 
         <BrandFilters
           filters={filters}

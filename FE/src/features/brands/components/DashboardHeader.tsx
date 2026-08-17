@@ -1,13 +1,17 @@
-import { Download, KeyRound, LogOut } from 'lucide-react'
+import { Building2, Download, KeyRound, LogOut, Scale } from 'lucide-react'
 import { ToolbarButton } from '../../../shared/ui'
 
 export function DashboardHeader({
+  onManageAgencies,
+  onManageCompanies,
   onExportCSV,
   onExportJSON,
   onLogout,
   onOpenPassword,
   userLabel,
 }: {
+  onManageAgencies: () => void
+  onManageCompanies: () => void
   onExportCSV: () => void
   onExportJSON: () => void
   onLogout: () => void
@@ -31,6 +35,12 @@ export function DashboardHeader({
         <span className="rounded-full border border-border bg-cream px-3 py-1.5 text-xs font-semibold text-brown-700">
           {userLabel}
         </span>
+        <ToolbarButton icon={<Building2 size={15} />} onClick={onManageCompanies}>
+          Quản lý pháp nhân
+        </ToolbarButton>
+        <ToolbarButton icon={<Scale size={15} />} onClick={onManageAgencies}>
+          Quản lý đại diện SHTT
+        </ToolbarButton>
         <ToolbarButton icon={<KeyRound size={15} />} onClick={onOpenPassword}>
           Đổi mật khẩu
         </ToolbarButton>

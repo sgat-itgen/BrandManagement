@@ -41,10 +41,6 @@ export async function createBrand(input: NewBrandInput) {
 }
 
 export async function deleteBrand(id: number) {
-  const target = brands.find((brand) => brand.id === id)
-  if (!target?.isCustom) {
-    throw new Error('Chỉ có thể xóa thương hiệu tự thêm')
-  }
   brands = brands.filter((brand) => brand.id !== id)
   return delay({ ok: true })
 }

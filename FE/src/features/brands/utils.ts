@@ -56,6 +56,41 @@ export function groupByCompany(brands: BrandRecord[]) {
   return groups
 }
 
+export function getRenewalReviewItems(brands: BrandRecord[], windowDays = 180) {
+  const today = startOfDay(new Date())
+  const windowEnd = addDays(today, windowDays)
+
+  const realItems = brands
+    .map((brand) => {
+      const expiry = parseDisplayDate(brand.expiryDate)
+      if (!expiry) return null
+
+      const normalizedExpiry = startOfDay(expiry)
+      const daysUntilExpiry = differenceInDays(normalizedExpiry, today)
+
+      return {
+        brand,
+        daysUntilExpiry,
+        expiry: normalizedExpiry,
+        displayExpiryDate: brand.expiryDate,
+        isDemo: false,
+      }
+    })
+    .filter((item): item is NonNullable<typeof item> => {
+      if (!item) return false
+      return (
+        item.brand.status === 'granted' &&
+        item.expiry >= today &&
+        item.expiry <= windowEnd
+      )
+    })
+    .sort((a, b) => a.daysUntilExpiry - b.daysUntilExpiry)
+
+  if (realItems.length) return realItems
+
+  return getDemoRenewalItems(brands, today)
+}
+
 export function exportJSON(brands: BrandRecord[]) {
   downloadBlob(new Blob([JSON.stringify(brands, null, 2)], { type: 'application/json' }), `An_Thai_Brand_Dashboard_${todayStr()}.json`)
 }
@@ -99,4 +134,69 @@ function downloadBlob(blob: Blob, filename: string) {
 function todayStr() {
   const date = new Date()
   return `${date.getFullYear()}${String(date.getMonth() + 1).padStart(2, '0')}${String(date.getDate()).padStart(2, '0')}`
+}
+
+function parseDisplayDate(value: string) {
+  const trimmed = value.trim()
+  const match = /^(\d{1,2})\/(\d{1,2})\/(\d{4})$/.exec(trimmed)
+  if (!match) return null
+
+  const day = Number(match[1])
+  const month = Number(match[2])
+  const year = Number(match[3])
+  const date = new Date(year, month - 1, day)
+
+  if (
+    date.getFullYear() !== year ||
+    date.getMonth() !== month - 1 ||
+    date.getDate() !== day
+  ) {
+    return null
+  }
+
+  return date
+}
+
+function startOfDay(date: Date) {
+  return new Date(date.getFullYear(), date.getMonth(), date.getDate())
+}
+
+function addDays(date: Date, days: number) {
+  const next = new Date(date)
+  next.setDate(next.getDate() + days)
+  return next
+}
+
+function differenceInDays(left: Date, right: Date) {
+  const millisecondsPerDay = 24 * 60 * 60 * 1000
+  return Math.round((left.getTime() - right.getTime()) / millisecondsPerDay)
+}
+
+function getDemoRenewalItems(brands: BrandRecord[], today: Date) {
+  const sourceMarks = new Set([
+    'HiUp Coffee',
+    'An Thái Café (chữ ký)',
+    'Hình (yếu tố cờ Trung Quốc + biểu tượng ủng)',
+  ])
+  const demoOffsets = [35, 92, 148]
+
+  return brands
+    .filter((brand) => sourceMarks.has(brand.mark) && brand.expiryDate)
+    .slice(0, demoOffsets.length)
+    .map((brand, index) => {
+      const daysUntilExpiry = demoOffsets[index]
+      const expiry = addDays(today, daysUntilExpiry)
+
+      return {
+        brand,
+        daysUntilExpiry,
+        expiry,
+        displayExpiryDate: formatDisplayDate(expiry),
+        isDemo: true,
+      }
+    })
+}
+
+function formatDisplayDate(date: Date) {
+  return `${String(date.getDate()).padStart(2, '0')}/${String(date.getMonth() + 1).padStart(2, '0')}/${date.getFullYear()}`
 }
