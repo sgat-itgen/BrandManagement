@@ -1,4 +1,4 @@
-import { COMPANY_LABEL, COMPANY_ORDER, STATUS_META } from '../mocks'
+import { STATUS_META } from '../mocks'
 import { chartColors, statusOrder } from '../constants'
 import type { BrandRecord, BrandStatus } from '../types'
 import type { getStats } from '../utils'
@@ -29,7 +29,15 @@ export function KpiGrid({ stats }: { stats: Stats }) {
   )
 }
 
-export function AnalyticsRow({ brands, stats }: { brands: BrandRecord[]; stats: Stats }) {
+export function AnalyticsRow({
+  brands,
+  stats,
+  companies,
+}: {
+  brands: BrandRecord[]
+  stats: Stats
+  companies: Array<{ code: string; label: string }>
+}) {
   const maxCompany = Math.max(...Object.values(stats.byCompany), 1)
   const agencies = Object.entries(stats.byAgency)
     .map(([agency, count]) => [agency || 'Chưa xác định', count] as const)
@@ -53,13 +61,13 @@ export function AnalyticsRow({ brands, stats }: { brands: BrandRecord[]; stats: 
       </Panel>
       <Panel title="Theo pháp nhân">
         <div className="space-y-2.5">
-          {COMPANY_ORDER.map((company) => (
-            <div key={company} className="flex items-center gap-3 text-[12.5px]">
-              <span className="w-36 shrink-0 font-semibold text-brown-800">{COMPANY_LABEL[company]}</span>
+          {companies.map((company) => (
+            <div key={company.code} className="flex items-center gap-3 text-[12.5px]">
+              <span className="w-36 shrink-0 font-semibold text-brown-800">{company.label}</span>
               <div className="h-4 flex-1 overflow-hidden rounded-md bg-[#F1EBE0]">
-                <div className="h-full bg-brown-700" style={{ width: `${(stats.byCompany[company] / maxCompany) * 100}%` }} />
+                <div className="h-full bg-brown-700" style={{ width: `${((stats.byCompany[company.code] ?? 0) / maxCompany) * 100}%` }} />
               </div>
-              <b className="w-7 text-right text-brown-900">{stats.byCompany[company]}</b>
+              <b className="w-7 text-right text-brown-900">{stats.byCompany[company.code] ?? 0}</b>
             </div>
           ))}
         </div>

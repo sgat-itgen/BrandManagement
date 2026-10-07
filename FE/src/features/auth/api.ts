@@ -1,30 +1,26 @@
 import type { User } from './types'
-
-let activeUser: User | null = null
-
-const delay = <T,>(value: T, ms = 180) =>
-  new Promise<T>((resolve) => {
-    window.setTimeout(() => resolve(value), ms)
-  })
+import { ApiError, apiRequest } from '../../shared/api/client'
 
 export async function login(email: string, password: string): Promise<User> {
   if (!email.trim() || !password.trim()) {
     throw new Error('Thiếu email hoặc mật khẩu')
   }
 
-  activeUser = {
-    email: email.trim().toLowerCase(),
-    name: 'Nhóm pháp chế An Thái',
-    role: 'admin',
-  }
-  return delay(activeUser)
+  return apiRequest<User>('/api/auth/login', {
+    method: 'POST',
+    body: JSON.stringify({ email: email.trim(), password }),
+  })
 }
 
 export async function logout() {
-  activeUser = null
-  return delay({ ok: true })
+  return apiRequest<void>('/api/auth/logout', { method: 'POST' })
 }
 
-export async function getCurrentUser() {
-  return delay(activeUser)
+export async function getCurrentUser(): Promise<User | null> {
+  try {
+    return await apiRequest<User>('/api/auth/me')
+  } catch (error) {
+    if (error instanceof ApiError && error.status === 401) return null
+    throw error
+  }
 }

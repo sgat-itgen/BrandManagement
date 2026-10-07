@@ -47,7 +47,8 @@ export function useBrandMutations() {
       onSuccess: invalidateBrands,
     }),
     removeAttachment: useMutation({
-      mutationFn: removeAttachment,
+      mutationFn: ({ brandId, attachmentId }: { brandId: number; attachmentId: number }) =>
+        removeAttachment({ brandId, attachmentId }),
       onSuccess: invalidateBrands,
     }),
   }

@@ -1,9 +1,10 @@
 export type BrandStatus = 'granted' | 'expired' | 'pending' | 'rejected'
 
-export type CompanyCode = 'TNHH' | 'SGAT' | 'DTPT' | 'SXTM'
+export type CompanyCode = string
 
 export interface Attachment {
   id: number
+  kind?: string
   name: string
   size: number
   type: string
@@ -23,6 +24,7 @@ export interface BrandRecord {
   detail: string
   status: BrandStatus
   agency: string
+  agencyId?: number
   note: string
   logo: string
   isCustom: boolean
@@ -37,6 +39,7 @@ export interface BrandPatch {
   expiryDate: string
   agency: string
   note: string
+  agencyId?: number | null
 }
 
 export interface NewBrandInput {

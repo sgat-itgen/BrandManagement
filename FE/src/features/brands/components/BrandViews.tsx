@@ -1,5 +1,4 @@
 import { FileText, Plus } from 'lucide-react'
-import { COMPANY_LABEL, COMPANY_ORDER } from '../mocks'
 import type { CompanyCode, BrandRecord } from '../types'
 import { compact } from '../utils'
 import { BrandCard } from './BrandCard'
@@ -14,22 +13,24 @@ export type ModalIntent =
 
 export function CardView({
   groups,
+  companies,
   onAdd,
   onOpen,
 }: {
   groups: Record<CompanyCode, BrandRecord[]>
+  companies: Array<{ code: string; label: string }>
   onAdd: (modal: ModalIntent) => void
   onOpen: (brandId: number) => void
 }) {
   return (
     <section className="space-y-6">
-      {COMPANY_ORDER.map((company) => (
-        <div key={company}>
+      {companies.map((company) => (
+        <div key={company.code}>
           <div className="mb-3 flex items-center gap-2.5 rounded-[10px] bg-brown-800 px-4 py-2.5 text-[13px] font-bold text-white">
-            <span>{COMPANY_LABEL[company]}</span>
-            <span className="rounded-full bg-white/20 px-2.5 py-0.5 text-[11.5px]">{groups[company].length}</span>
+            <span>{company.label}</span>
+            <span className="rounded-full bg-white/20 px-2.5 py-0.5 text-[11.5px]">{groups[company.code]?.length ?? 0}</span>
             <button
-              onClick={() => onAdd({ mode: 'add', company })}
+              onClick={() => onAdd({ mode: 'add', company: company.code })}
               className="ml-auto inline-flex items-center gap-1 rounded-full border border-white/40 bg-white/15 px-3 py-1 text-[11.5px] font-bold hover:bg-white/25"
               type="button"
             >
@@ -38,7 +39,7 @@ export function CardView({
             </button>
           </div>
           <div className="grid gap-3 sm:grid-cols-2 xl:grid-cols-4 2xl:grid-cols-5">
-            {groups[company].map((brand) => (
+            {(groups[company.code] ?? []).map((brand) => (
               <BrandCard key={brand.id} brand={brand} onOpen={onOpen} />
             ))}
           </div>
@@ -48,7 +49,15 @@ export function CardView({
   )
 }
 
-export function TableView({ brands, onOpen }: { brands: BrandRecord[]; onOpen: (brandId: number) => void }) {
+export function TableView({
+  brands,
+  companyLabels,
+  onOpen,
+}: {
+  brands: BrandRecord[]
+  companyLabels: Record<string, string>
+  onOpen: (brandId: number) => void
+}) {
   return (
     <div className="overflow-auto rounded-[14px] border border-border bg-white shadow-soft">
       <table className="w-full border-collapse text-[12.5px]">
@@ -73,7 +82,7 @@ export function TableView({ brands, onOpen }: { brands: BrandRecord[]; onOpen: (
                   </div>
                 )}
               </td>
-              <td className="px-3 py-2 font-semibold text-brown-800">{COMPANY_LABEL[brand.company]}</td>
+              <td className="px-3 py-2 font-semibold text-brown-800">{companyLabels[brand.company] ?? brand.company}</td>
               <td className="px-3 py-2">
                 <div className="font-bold text-brown-900">{brand.mark}</div>
                 <div className="text-[11px] text-muted">{brand.detail}</div>

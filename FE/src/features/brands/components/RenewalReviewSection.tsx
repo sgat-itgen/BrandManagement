@@ -1,5 +1,5 @@
 import { CalendarClock } from 'lucide-react'
-import { COMPANY_LABEL, STATUS_META } from '../mocks'
+import { STATUS_META } from '../mocks'
 import type { getRenewalReviewItems } from '../utils'
 import { compact } from '../utils'
 import { Panel } from '../../../shared/ui'
@@ -9,10 +9,12 @@ type RenewalItems = ReturnType<typeof getRenewalReviewItems>
 
 export function RenewalReviewSection({
   items,
+  companyLabels,
   windowDays = 180,
   onOpenBrand,
 }: {
   items: RenewalItems
+  companyLabels: Record<string, string>
   windowDays?: number
   onOpenBrand: (brandId: number) => void
 }) {
@@ -34,7 +36,7 @@ export function RenewalReviewSection({
                 <span className="min-w-0 flex-1">
                   <span className="block truncate text-[13px] font-bold text-brown-900">{brand.mark}</span>
                   <span className="mt-1 block text-[11.5px] text-muted">
-                    {COMPANY_LABEL[brand.company]} · Nhóm {compact(brand.groups)} · Hết hạn {displayExpiryDate}
+                    {companyLabels[brand.company] ?? brand.company} · Nhóm {compact(brand.groups)} · Hết hạn {displayExpiryDate}
                   </span>
                   <span className="mt-2 flex flex-wrap items-center gap-2">
                     <StatusBadge status={brand.status} />

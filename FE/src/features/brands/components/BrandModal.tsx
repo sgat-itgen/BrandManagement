@@ -13,10 +13,12 @@ export type { ModalState } from './modal/types'
 
 export function BrandModal({
   brands,
+  companyLabels,
   modal,
   onClose,
 }: {
   brands: BrandRecord[]
+  companyLabels?: Record<string, string>
   modal: ModalState
   onClose: () => void
 }) {
@@ -26,7 +28,7 @@ export function BrandModal({
   if (!modal) return null
 
   const title = getModalTitle(modal, brand)
-  const subtitle = getModalSubtitle(modal, brand)
+  const subtitle = getModalSubtitle(modal, brand, companyLabels)
 
   return (
     <div className="fixed inset-0 z-50 grid place-items-center bg-brown-900/45 p-5" onClick={onClose}>

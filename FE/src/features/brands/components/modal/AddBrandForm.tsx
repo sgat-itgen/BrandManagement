@@ -4,6 +4,8 @@ import { statusOrder } from '../../constants'
 import { COMPANY_LABEL, COMPANY_ORDER, STATUS_META } from '../../mocks'
 import type { BrandRecord, BrandStatus, CompanyCode, NewBrandInput } from '../../types'
 import { Field } from '../../../../shared/ui'
+import { useCompanies } from '../../../companies/hooks/useCompanies'
+import { useAgencies } from '../../../agencies/hooks/useAgencies'
 
 export function AddBrandForm({
   company,
@@ -16,6 +18,8 @@ export function AddBrandForm({
   onClose: () => void
   updateLogo: ({ id, file }: { id: number; file: File | null }) => Promise<unknown>
 }) {
+  const { data: companies = [] } = useCompanies()
+  const { data: agencies = [] } = useAgencies()
   const [form, setForm] = useState<NewBrandInput>({
     company,
     mark: '',
@@ -53,9 +57,12 @@ export function AddBrandForm({
     <div className="space-y-3 px-6 py-5">
       <Field label="Pháp nhân">
         <select value={form.company} onChange={(event) => update({ company: event.target.value as CompanyCode })} className="field-input">
-          {COMPANY_ORDER.map((item) => (
-            <option key={item} value={item}>
-              {COMPANY_LABEL[item]}
+          {(companies.length
+            ? companies.map((item) => ({ code: item.code, name: item.legalName }))
+            : COMPANY_ORDER.map((item) => ({ code: item, name: COMPANY_LABEL[item] }))
+          ).map((item) => (
+            <option key={item.code} value={item.code}>
+              {item.name}
             </option>
           ))}
         </select>
@@ -85,7 +92,10 @@ export function AddBrandForm({
         </select>
       </Field>
       <Field label="Đơn vị đại diện SHTT">
-        <input value={form.agency} onChange={(event) => update({ agency: event.target.value })} className="field-input" />
+        <select value={form.agency} onChange={(event) => update({ agency: event.target.value })} className="field-input">
+          <option value="">Chưa xác định</option>
+          {agencies.map((agency) => <option key={agency.id} value={agency.name}>{agency.name}</option>)}
+        </select>
       </Field>
       <Field label="Ghi chú">
         <textarea value={form.note} onChange={(event) => update({ note: event.target.value })} className="field-input min-h-20 resize-y" />

@@ -76,7 +76,12 @@ export function DetailForm({
             </span>
             <input className="hidden" type="file" multiple onChange={uploadAttachments} />
           </label>
-          <AttachmentList brand={brand} removeAttachment={mutations.removeAttachment.mutate} />
+          <AttachmentList
+            brand={brand}
+            removeAttachment={(attachmentId) =>
+              mutations.removeAttachment.mutate({ brandId: brand.id, attachmentId })
+            }
+          />
         </Field>
       </div>
 

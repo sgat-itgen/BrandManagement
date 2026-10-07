@@ -1,5 +1,5 @@
 import { Grid2X2, List, Search } from 'lucide-react'
-import { COMPANY_LABEL, COMPANY_ORDER, STATUS_META } from '../mocks'
+import { STATUS_META } from '../mocks'
 import { statusOrder, type Filters, type ViewMode } from '../constants'
 import type { getFilterOptions } from '../utils'
 
@@ -8,12 +8,14 @@ type FilterOptions = ReturnType<typeof getFilterOptions>
 export function BrandFilters({
   filters,
   options,
+  companies,
   viewMode,
   onFiltersChange,
   onViewModeChange,
 }: {
   filters: Filters
   options: FilterOptions
+  companies: Array<{ code: string; label: string }>
   viewMode: ViewMode
   onFiltersChange: (filters: Filters) => void
   onViewModeChange: (mode: ViewMode) => void
@@ -33,9 +35,9 @@ export function BrandFilters({
       </label>
       <Select value={filters.company} onChange={(value) => update({ company: value as Filters['company'] })}>
         <option value="">Tất cả pháp nhân</option>
-        {COMPANY_ORDER.map((company) => (
-          <option key={company} value={company}>
-            {COMPANY_LABEL[company]}
+        {companies.map((company) => (
+          <option key={company.code} value={company.code}>
+            {company.label}
           </option>
         ))}
       </Select>

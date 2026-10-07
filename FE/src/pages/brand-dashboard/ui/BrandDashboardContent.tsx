@@ -1,6 +1,8 @@
 import { useMemo, useState } from 'react'
 import { emptyFilters, type Filters, type ViewMode } from '../../../features/brands/constants'
 import { useBrands } from '../../../features/brands/hooks/useBrands'
+import { useCompanies } from '../../../features/companies/hooks/useCompanies'
+import { COMPANY_LABEL, COMPANY_ORDER } from '../../../features/brands/mocks'
 import {
   exportCSV,
   exportJSON,
@@ -25,6 +27,7 @@ export function BrandDashboardContent({
   onLogout: () => void
 }) {
   const { data: brands = [], isLoading } = useBrands()
+  const { data: companies = [] } = useCompanies()
   const [filters, setFilters] = useState<Filters>(emptyFilters)
   const [viewMode, setViewMode] = useState<ViewMode>('card')
   const [modal, setModal] = useState<ModalState>(null)
@@ -34,6 +37,29 @@ export function BrandDashboardContent({
   const stats = useMemo(() => getStats(brands), [brands])
   const companyGroups = useMemo(() => groupByCompany(filtered), [filtered])
   const renewalReviewItems = useMemo(() => getRenewalReviewItems(brands), [brands])
+  const companyOptions = useMemo(() => {
+    const optionsByCode = new Map(
+      (companies.length
+        ? companies.map((company) => ({ code: company.code, label: company.legalName }))
+        : COMPANY_ORDER.map((code) => ({ code, label: COMPANY_LABEL[code] })))
+        .map((company) => [company.code, company] as const),
+    )
+
+    brands.forEach((brand) => {
+      if (!optionsByCode.has(brand.company)) {
+        optionsByCode.set(brand.company, {
+          code: brand.company,
+          label: COMPANY_LABEL[brand.company] ?? brand.company,
+        })
+      }
+    })
+
+    return [...optionsByCode.values()]
+  }, [brands, companies])
+  const companyLabels = useMemo(
+    () => Object.fromEntries(companyOptions.map((company) => [company.code, company.label])),
+    [companyOptions],
+  )
 
   return (
     <main className="min-h-screen bg-cream text-sm text-brand-text">
@@ -43,21 +69,23 @@ export function BrandDashboardContent({
           onLogout={onLogout}
           onOpenPassword={() => setModal({ mode: 'password' })}
           onExportJSON={() => exportJSON(brands)}
-          onExportCSV={() => exportCSV(brands)}
+          onExportCSV={() => exportCSV(brands, companyLabels)}
           onManageCompanies={() => setModal({ mode: 'manage-companies' })}
           onManageAgencies={() => setModal({ mode: 'manage-agencies' })}
         />
 
         <KpiGrid stats={stats} />
-        <AnalyticsRow brands={brands} stats={stats} />
+        <AnalyticsRow brands={brands} stats={stats} companies={companyOptions} />
         <RenewalReviewSection
           items={renewalReviewItems}
+          companyLabels={companyLabels}
           onOpenBrand={(brandId) => setModal({ mode: 'detail', brandId })}
         />
 
         <BrandFilters
           filters={filters}
           options={options}
+          companies={companyOptions}
           viewMode={viewMode}
           onFiltersChange={setFilters}
           onViewModeChange={setViewMode}
@@ -70,11 +98,16 @@ export function BrandDashboardContent({
         {viewMode === 'card' ? (
           <CardView
             groups={companyGroups}
+            companies={companyOptions}
             onAdd={setModal}
             onOpen={(brandId) => setModal({ mode: 'detail', brandId })}
           />
         ) : (
-          <TableView brands={filtered} onOpen={(brandId) => setModal({ mode: 'detail', brandId })} />
+          <TableView
+            brands={filtered}
+            companyLabels={companyLabels}
+            onOpen={(brandId) => setModal({ mode: 'detail', brandId })}
+          />
         )}
 
         <footer className="mt-7 rounded-xl border border-border bg-white px-5 py-4 text-[11.5px] leading-relaxed text-muted">
@@ -84,7 +117,12 @@ export function BrandDashboardContent({
         </footer>
       </div>
 
-      <BrandModal modal={modal} brands={brands} onClose={() => setModal(null)} />
+      <BrandModal
+        modal={modal}
+        brands={brands}
+        companyLabels={companyLabels}
+        onClose={() => setModal(null)}
+      />
     </main>
   )
 }

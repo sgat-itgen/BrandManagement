@@ -11,10 +11,14 @@ export function getModalTitle(modal: Exclude<ModalState, null>, brand: BrandReco
   return brand?.mark ?? 'Chi tiết nhãn hiệu'
 }
 
-export function getModalSubtitle(modal: Exclude<ModalState, null>, brand: BrandRecord | null) {
-  if (modal.mode === 'add') return COMPANY_LABEL[modal.company]
+export function getModalSubtitle(
+  modal: Exclude<ModalState, null>,
+  brand: BrandRecord | null,
+  companyLabels: Record<string, string> = COMPANY_LABEL,
+) {
+  if (modal.mode === 'add') return companyLabels[modal.company] ?? modal.company
   if (modal.mode === 'password') return 'Mô phỏng form đổi mật khẩu theo prototype'
   if (modal.mode === 'manage-companies') return 'Danh mục pháp nhân đang có hồ sơ nhãn hiệu'
   if (modal.mode === 'manage-agencies') return 'Danh mục đơn vị đại diện SHTT theo dữ liệu hiện tại'
-  return brand ? `${COMPANY_LABEL[brand.company]} · Nhóm ${compact(brand.groups)}` : ''
+  return brand ? `${companyLabels[brand.company] ?? brand.company} · Nhóm ${compact(brand.groups)}` : ''
 }

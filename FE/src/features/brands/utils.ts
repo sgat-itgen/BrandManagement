@@ -1,4 +1,4 @@
-import { COMPANY_LABEL, COMPANY_ORDER, STATUS_META } from './mocks'
+import { COMPANY_LABEL, STATUS_META } from './mocks'
 import { statusOrder, type Filters } from './constants'
 import type { BrandRecord, BrandStatus, CompanyCode } from './types'
 
@@ -33,12 +33,12 @@ export function getFilterOptions(brands: BrandRecord[]) {
 
 export function getStats(brands: BrandRecord[]) {
   const byStatus = Object.fromEntries(statusOrder.map((status) => [status, 0])) as Record<BrandStatus, number>
-  const byCompany = Object.fromEntries(COMPANY_ORDER.map((company) => [company, 0])) as Record<CompanyCode, number>
+  const byCompany: Record<CompanyCode, number> = {}
   const byAgency: Record<string, number> = {}
 
   brands.forEach((brand) => {
     byStatus[brand.status] += 1
-    byCompany[brand.company] += 1
+    byCompany[brand.company] = (byCompany[brand.company] ?? 0) + 1
     byAgency[brand.agency] = (byAgency[brand.agency] ?? 0) + 1
   })
 
@@ -46,13 +46,11 @@ export function getStats(brands: BrandRecord[]) {
 }
 
 export function groupByCompany(brands: BrandRecord[]) {
-  const groups: Record<CompanyCode, BrandRecord[]> = {
-    TNHH: [],
-    SGAT: [],
-    DTPT: [],
-    SXTM: [],
-  }
-  brands.forEach((brand) => groups[brand.company].push(brand))
+  const groups: Record<CompanyCode, BrandRecord[]> = {}
+  brands.forEach((brand) => {
+    groups[brand.company] ??= []
+    groups[brand.company].push(brand)
+  })
   return groups
 }
 
@@ -95,11 +93,11 @@ export function exportJSON(brands: BrandRecord[]) {
   downloadBlob(new Blob([JSON.stringify(brands, null, 2)], { type: 'application/json' }), `An_Thai_Brand_Dashboard_${todayStr()}.json`)
 }
 
-export function exportCSV(brands: BrandRecord[]) {
+export function exportCSV(brands: BrandRecord[], companyLabels: Record<string, string> = COMPANY_LABEL) {
   const headers = ['ID', 'Pháp nhân', 'Nhãn hiệu', 'Loại', 'Nhóm', 'Số đơn', 'Số bằng', 'Ngày nộp', 'Ngày hết hạn', 'Trạng thái', 'Đại diện SHTT', 'Ghi chú']
   const rows = brands.map((brand) => [
     brand.id,
-    COMPANY_LABEL[brand.company],
+    companyLabels[brand.company] ?? brand.company,
     brand.mark,
     brand.type,
     brand.groups,
