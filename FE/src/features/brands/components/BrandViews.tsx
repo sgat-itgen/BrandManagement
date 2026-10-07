@@ -60,7 +60,7 @@ export function TableView({
 }) {
   return (
     <div className="overflow-auto rounded-[14px] border border-border bg-white shadow-soft">
-      <table className="w-full border-collapse text-[12.5px]">
+      <table className="min-w-[980px] w-full border-collapse text-[12.5px]">
         <thead>
           <tr className="bg-brown-800 text-left text-[11px] uppercase tracking-wide text-white">
             {['Logo', 'Pháp nhân', 'Nhãn hiệu', 'Loại', 'Nhóm', 'Đơn / Bằng', 'Ngày', 'Trạng thái', 'Đại diện', 'Đính kèm'].map((head) => (

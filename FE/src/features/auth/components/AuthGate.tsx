@@ -9,9 +9,13 @@ export function AuthGate({
   children: (user: User) => ReactNode
   fallback: ReactNode
 }) {
-  const { data: user } = useCurrentUser()
+  const { data: user, isLoading, isError } = useCurrentUser()
 
-  if (!user) {
+  if (isLoading) {
+    return <main className="grid min-h-screen place-items-center bg-cream px-5 text-sm text-muted">Đang kiểm tra phiên đăng nhập...</main>
+  }
+
+  if (isError || !user) {
     return fallback
   }
 

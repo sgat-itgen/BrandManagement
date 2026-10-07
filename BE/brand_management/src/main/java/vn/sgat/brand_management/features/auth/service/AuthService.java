@@ -4,6 +4,7 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import vn.sgat.brand_management.features.auth.api.ChangePasswordRequest;
 import vn.sgat.brand_management.features.auth.api.LoginRequest;
 import vn.sgat.brand_management.features.auth.api.UserResponse;
 import vn.sgat.brand_management.features.auth.domain.User;
@@ -27,6 +28,22 @@ public class AuthService {
         }
         user.setLastLoginAt(Instant.now());
         return user;
+    }
+
+    @Transactional
+    public void changePassword(Long userId, ChangePasswordRequest request) {
+        User user = find(userId);
+        if (!passwordEncoder.matches(request.currentPassword(), user.getPasswordHash())) {
+            throw new IllegalArgumentException("Mật khẩu hiện tại không đúng");
+        }
+        if (!request.newPassword().equals(request.confirmPassword())) {
+            throw new IllegalArgumentException("Mật khẩu mới không khớp");
+        }
+        if (request.newPassword().length() < 8) {
+            throw new IllegalArgumentException("Mật khẩu mới phải có ít nhất 8 ký tự");
+        }
+        user.setPasswordHash(passwordEncoder.encode(request.newPassword()));
+        userRepository.save(user);
     }
 
     public UserResponse me(User user) {

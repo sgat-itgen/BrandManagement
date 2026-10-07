@@ -16,6 +16,17 @@ export async function logout() {
   return apiRequest<void>('/api/auth/logout', { method: 'POST' })
 }
 
+export function changePassword(input: {
+  currentPassword: string
+  newPassword: string
+  confirmPassword: string
+}) {
+  return apiRequest<void>('/api/auth/password', {
+    method: 'POST',
+    body: JSON.stringify(input),
+  })
+}
+
 export async function getCurrentUser(): Promise<User | null> {
   try {
     return await apiRequest<User>('/api/auth/me')

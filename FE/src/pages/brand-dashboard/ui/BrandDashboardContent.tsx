@@ -22,11 +22,13 @@ import { RenewalReviewSection } from '../../../features/brands/components/Renewa
 export function BrandDashboardContent({
   userLabel,
   onLogout,
+  isLoggingOut,
 }: {
   userLabel: string
   onLogout: () => void
+  isLoggingOut: boolean
 }) {
-  const { data: brands = [], isLoading } = useBrands()
+  const { data: brands = [], isLoading, isError, error } = useBrands()
   const { data: companies = [] } = useCompanies()
   const [filters, setFilters] = useState<Filters>(emptyFilters)
   const [viewMode, setViewMode] = useState<ViewMode>('card')
@@ -67,6 +69,7 @@ export function BrandDashboardContent({
         <DashboardHeader
           userLabel={userLabel}
           onLogout={onLogout}
+          isLoggingOut={isLoggingOut}
           onOpenPassword={() => setModal({ mode: 'password' })}
           onExportJSON={() => exportJSON(brands)}
           onExportCSV={() => exportCSV(brands, companyLabels)}
@@ -94,6 +97,11 @@ export function BrandDashboardContent({
         <p className="mb-3 ml-1 text-xs text-muted">
           {isLoading ? 'Đang tải dữ liệu...' : `Hiển thị ${filtered.length} / ${brands.length} hồ sơ`}
         </p>
+        {isError ? (
+          <p className="mb-3 rounded-lg border border-status-red/35 bg-status-red-bg px-3 py-2 text-xs font-semibold text-status-red">
+            {error instanceof Error ? error.message : 'Không thể tải dữ liệu thương hiệu'}
+          </p>
+        ) : null}
 
         {viewMode === 'card' ? (
           <CardView

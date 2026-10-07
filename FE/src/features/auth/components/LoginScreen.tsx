@@ -4,8 +4,8 @@ import { useLogin } from '../hooks/useAuth'
 export function LoginScreen() {
   const loginMutation = useLogin()
   const [loginError, setLoginError] = useState('')
-  const [email, setEmail] = useState('phapche@saigonanthai.vn')
-  const [password, setPassword] = useState('demo123')
+  const [email, setEmail] = useState('')
+  const [password, setPassword] = useState('')
 
   const handleSubmit = async (event: FormEvent<HTMLFormElement>) => {
     event.preventDefault()

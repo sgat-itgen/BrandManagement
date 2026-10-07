@@ -17,7 +17,7 @@ export function getModalSubtitle(
   companyLabels: Record<string, string> = COMPANY_LABEL,
 ) {
   if (modal.mode === 'add') return companyLabels[modal.company] ?? modal.company
-  if (modal.mode === 'password') return 'Mô phỏng form đổi mật khẩu theo prototype'
+  if (modal.mode === 'password') return 'Cập nhật mật khẩu đăng nhập của tài khoản hiện tại'
   if (modal.mode === 'manage-companies') return 'Danh mục pháp nhân đang có hồ sơ nhãn hiệu'
   if (modal.mode === 'manage-agencies') return 'Danh mục đơn vị đại diện SHTT theo dữ liệu hiện tại'
   return brand ? `${companyLabels[brand.company] ?? brand.company} · Nhóm ${compact(brand.groups)}` : ''

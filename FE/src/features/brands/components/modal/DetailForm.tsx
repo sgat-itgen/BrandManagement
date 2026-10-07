@@ -20,26 +20,46 @@ export function DetailForm({
   const [expiryDate, setExpiryDate] = useState(brand.expiryDate)
   const [agency, setAgency] = useState(brand.agency)
   const [note, setNote] = useState(brand.note)
+  const [error, setError] = useState('')
+  const isBusy = mutations.updateBrand.isPending || mutations.updateLogo.isPending || mutations.addAttachments.isPending || mutations.removeAttachment.isPending || mutations.deleteBrand.isPending
 
   const save = async () => {
-    await mutations.updateBrand.mutateAsync({ id: brand.id, patch: { status, expiryDate, agency, note } })
-    onClose()
+    setError('')
+    try {
+      await mutations.updateBrand.mutateAsync({ id: brand.id, patch: { status, expiryDate, agency, note } })
+      onClose()
+    } catch (saveError) {
+      setError(saveError instanceof Error ? saveError.message : 'Không thể lưu thay đổi')
+    }
   }
 
   const uploadLogo = async (event: ChangeEvent<HTMLInputElement>) => {
     const file = event.target.files?.[0]
-    if (file) await mutations.updateLogo.mutateAsync({ id: brand.id, file })
+    if (file) {
+      try {
+        await mutations.updateLogo.mutateAsync({ id: brand.id, file })
+      } catch (uploadError) {
+        setError(uploadError instanceof Error ? uploadError.message : 'Không thể tải ảnh lên')
+      }
+    }
     event.target.value = ''
   }
 
   const uploadAttachments = async (event: ChangeEvent<HTMLInputElement>) => {
     const files = Array.from(event.target.files ?? [])
-    if (files.length) await mutations.addAttachments.mutateAsync({ id: brand.id, files })
+    if (files.length) {
+      try {
+        await mutations.addAttachments.mutateAsync({ id: brand.id, files })
+      } catch (uploadError) {
+        setError(uploadError instanceof Error ? uploadError.message : 'Không thể tải file lên')
+      }
+    }
     event.target.value = ''
   }
 
   return (
-    <div className="px-6 py-5">
+    <div className="px-4 py-5 sm:px-6">
+      {error ? <p className="mb-3 rounded-lg border border-status-red/35 bg-status-red-bg px-3 py-2 text-xs font-semibold text-status-red">{error}</p> : null}
       {brand.assumption ? (
         <div className="mb-4 rounded-lg border border-status-amber/35 bg-status-amber-bg px-3 py-2.5 text-xs text-[#8a6d00]">
           <b>Giả định / cần xác nhận:</b> {brand.assumptionNote}
@@ -87,11 +107,17 @@ export function DetailForm({
 
       <DetailActions
         deleteBrand={async () => {
-          await mutations.deleteBrand.mutateAsync(brand.id)
-          onClose()
+          setError('')
+          try {
+            await mutations.deleteBrand.mutateAsync(brand.id)
+            onClose()
+          } catch (deleteError) {
+            setError(deleteError instanceof Error ? deleteError.message : 'Không thể xóa thương hiệu')
+          }
         }}
         onClose={onClose}
         save={save}
+        disabled={isBusy}
       />
     </div>
   )
@@ -188,15 +214,18 @@ function DetailActions({
   deleteBrand,
   onClose,
   save,
+  disabled,
 }: {
   deleteBrand: () => Promise<void>
   onClose: () => void
   save: () => Promise<void>
+  disabled: boolean
 }) {
   return (
     <div className="mt-4 flex flex-wrap items-center justify-between gap-2">
       <button
-        onClick={deleteBrand}
+        onClick={() => void deleteBrand()}
+        disabled={disabled}
         className="inline-flex items-center gap-2 rounded-lg border border-status-red/35 px-3 py-2 text-xs font-semibold text-status-red hover:bg-status-red-bg"
         type="button"
       >
@@ -206,13 +235,14 @@ function DetailActions({
       <div className="ml-auto flex flex-wrap items-center justify-end gap-2">
         <button
           onClick={onClose}
+          disabled={disabled}
           className="inline-flex items-center gap-2 rounded-lg border border-border px-4 py-2 text-sm font-bold text-brown-800 hover:bg-cream"
           type="button"
         >
           <X size={16} />
           Bỏ chỉnh sửa
         </button>
-        <button onClick={save} className="inline-flex items-center gap-2 rounded-lg bg-brown-800 px-4 py-2 text-sm font-bold text-white hover:bg-brown-900" type="button">
+        <button onClick={() => void save()} disabled={disabled} className="inline-flex items-center gap-2 rounded-lg bg-brown-800 px-4 py-2 text-sm font-bold text-white hover:bg-brown-900 disabled:cursor-not-allowed disabled:opacity-60" type="button">
           <Save size={16} />
           Lưu thay đổi
         </button>

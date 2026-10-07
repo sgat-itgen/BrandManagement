@@ -33,7 +33,7 @@ export function BrandModal({
   return (
     <div className="fixed inset-0 z-50 grid place-items-center bg-brown-900/45 p-5" onClick={onClose}>
       <div className="max-h-[90vh] w-full max-w-160 overflow-y-auto rounded-2xl bg-white shadow-[0_20px_60px_rgba(0,0,0,.3)]" onClick={(event) => event.stopPropagation()}>
-        <div className="sticky top-0 flex items-start justify-between gap-3 rounded-t-2xl border-b border-border bg-white px-6 py-5">
+        <div className="sticky top-0 flex items-start justify-between gap-3 rounded-t-2xl border-b border-border bg-white px-4 py-5 sm:px-6">
           <div>
             <h2 className="text-base font-bold text-brown-900">{title}</h2>
             <p className="mt-1 text-xs text-muted">{subtitle}</p>
@@ -52,6 +52,7 @@ export function BrandModal({
             onClose={onClose}
             createBrand={mutations.createBrand.mutateAsync}
             updateLogo={mutations.updateLogo.mutateAsync}
+            isSaving={mutations.createBrand.isPending || mutations.updateLogo.isPending}
           />
         ) : null}
         {modal.mode === 'password' ? <PasswordForm onClose={onClose} /> : null}

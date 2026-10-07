@@ -9,6 +9,7 @@ export function DashboardHeader({
   onLogout,
   onOpenPassword,
   userLabel,
+  isLoggingOut,
 }: {
   onManageAgencies: () => void
   onManageCompanies: () => void
@@ -17,17 +18,18 @@ export function DashboardHeader({
   onLogout: () => void
   onOpenPassword: () => void
   userLabel: string
+  isLoggingOut: boolean
 }) {
   return (
     <header className="mb-5 flex flex-col gap-4 rounded-[14px] border border-border bg-white px-5 py-4 shadow-soft lg:flex-row lg:items-center lg:justify-between">
       <div className="flex items-center gap-4">
         <img className="h-13 w-auto object-contain" src="/logo-sgat.png" alt="Sài Gòn An Thái" />
-        <div>
-          <h1 className="text-[19px] font-extrabold tracking-wide text-brown-900">
+        <div className="min-w-0">
+          <h1 className="text-base font-extrabold tracking-wide text-brown-900 sm:text-[19px]">
             DASHBOARD QUẢN LÝ NHÃN HIỆU (LOGO) — TẬP ĐOÀN AN THÁI
           </h1>
           <p className="mt-0.5 text-[12.5px] text-muted">
-            Theo dõi tình trạng bảo hộ thương hiệu theo từng pháp nhân · Mock API sẵn sàng thay bằng API thật
+            Theo dõi tình trạng bảo hộ thương hiệu theo từng pháp nhân
           </p>
         </div>
       </div>
@@ -50,8 +52,8 @@ export function DashboardHeader({
         <ToolbarButton icon={<Download size={15} />} onClick={onExportCSV}>
           CSV
         </ToolbarButton>
-        <ToolbarButton danger icon={<LogOut size={15} />} onClick={onLogout}>
-          Đăng xuất
+        <ToolbarButton danger icon={<LogOut size={15} />} onClick={onLogout} disabled={isLoggingOut}>
+          {isLoggingOut ? 'Đang thoát...' : 'Đăng xuất'}
         </ToolbarButton>
       </div>
     </header>

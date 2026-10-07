@@ -11,7 +11,8 @@ export function BrandDashboardPage() {
       {(user) => (
         <BrandDashboardContent
           userLabel={`${user.name} · ${user.email}`}
-          onLogout={() => logoutMutation.mutate()}
+          onLogout={() => void logoutMutation.mutateAsync()}
+          isLoggingOut={logoutMutation.isPending}
         />
       )}
     </AuthGate>

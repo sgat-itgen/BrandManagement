@@ -12,11 +12,13 @@ export function AddBrandForm({
   createBrand,
   onClose,
   updateLogo,
+  isSaving,
 }: {
   company: CompanyCode
   createBrand: (input: NewBrandInput) => Promise<BrandRecord>
   onClose: () => void
   updateLogo: ({ id, file }: { id: number; file: File | null }) => Promise<unknown>
+  isSaving: boolean
 }) {
   const { data: companies = [] } = useCompanies()
   const { data: agencies = [] } = useAgencies()
@@ -35,14 +37,20 @@ export function AddBrandForm({
   })
   const [logoFile, setLogoFile] = useState<File | null>(null)
   const [logoPreview, setLogoPreview] = useState('')
+  const [error, setError] = useState('')
 
   const update = (patch: Partial<NewBrandInput>) => setForm((current) => ({ ...current, ...patch }))
 
   const save = async () => {
     if (!form.mark.trim()) return
-    const created = await createBrand(form)
-    if (logoFile) await updateLogo({ id: created.id, file: logoFile })
-    onClose()
+    setError('')
+    try {
+      const created = await createBrand(form)
+      if (logoFile) await updateLogo({ id: created.id, file: logoFile })
+      onClose()
+    } catch (saveError) {
+      setError(saveError instanceof Error ? saveError.message : 'Không thể lưu thương hiệu')
+    }
   }
 
   const handleLogoSelect = (event: ChangeEvent<HTMLInputElement>) => {
@@ -54,7 +62,8 @@ export function AddBrandForm({
   }
 
   return (
-    <div className="space-y-3 px-6 py-5">
+    <div className="space-y-3 px-4 py-5 sm:px-6">
+      {error ? <p className="rounded-lg border border-status-red/35 bg-status-red-bg px-3 py-2 text-xs font-semibold text-status-red">{error}</p> : null}
       <Field label="Pháp nhân">
         <select value={form.company} onChange={(event) => update({ company: event.target.value as CompanyCode })} className="field-input">
           {(companies.length
@@ -101,9 +110,9 @@ export function AddBrandForm({
         <textarea value={form.note} onChange={(event) => update({ note: event.target.value })} className="field-input min-h-20 resize-y" />
       </Field>
       <div className="flex justify-end">
-        <button onClick={save} className="inline-flex items-center gap-2 rounded-lg bg-brown-800 px-4 py-2 text-sm font-bold text-white hover:bg-brown-900" type="button">
+        <button onClick={() => void save()} disabled={isSaving} className="inline-flex items-center gap-2 rounded-lg bg-brown-800 px-4 py-2 text-sm font-bold text-white hover:bg-brown-900 disabled:cursor-not-allowed disabled:opacity-60" type="button">
           <Plus size={16} />
-          Thêm thương hiệu
+          {isSaving ? 'Đang lưu...' : 'Thêm thương hiệu'}
         </button>
       </div>
     </div>

@@ -111,7 +111,7 @@ function ViewButton({
   return (
     <button
       onClick={onClick}
-      className={`inline-flex items-center gap-1.5 px-4 py-2.5 text-[12.5px] font-semibold ${
+      className={`inline-flex items-center gap-1.5 px-3 py-2.5 text-[12.5px] font-semibold sm:px-4 ${
         active ? 'bg-brown-800 text-white' : 'bg-white text-muted hover:bg-cream'
       }`}
       type="button"

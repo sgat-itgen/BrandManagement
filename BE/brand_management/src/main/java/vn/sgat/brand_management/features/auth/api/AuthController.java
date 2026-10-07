@@ -41,4 +41,17 @@ public class AuthController {
         return ResponseEntity.noContent().build();
     }
 
+    @PostMapping("/password")
+    public ResponseEntity<Void> changePassword(
+        @Valid @RequestBody ChangePasswordRequest request,
+        HttpSession session
+    ) {
+        Object userId = session.getAttribute(SessionAuthenticationFilter.SESSION_USER_ID);
+        if (!(userId instanceof Long id)) {
+            return ResponseEntity.status(401).build();
+        }
+        authService.changePassword(id, request);
+        return ResponseEntity.noContent().build();
+    }
+
 }
