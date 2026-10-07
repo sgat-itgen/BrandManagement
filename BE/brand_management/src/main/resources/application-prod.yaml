@@ -1,0 +1,19 @@
+spring:
+  docker:
+    compose:
+      enabled: false
+  datasource:
+    url: ${DB_URL}
+    username: ${DB_USERNAME}
+    password: ${DB_PASSWORD}
+    hikari:
+      maximum-pool-size: ${DB_POOL_SIZE:20}
+  jpa:
+    properties:
+      hibernate:
+        jdbc:
+          time_zone: UTC
+
+app:
+  seed:
+    enabled: false

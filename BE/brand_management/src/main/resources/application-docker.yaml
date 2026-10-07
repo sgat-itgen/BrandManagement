@@ -1,0 +1,12 @@
+spring:
+  docker:
+    compose:
+      enabled: true
+  datasource:
+    url: jdbc:postgresql://${DB_HOST:postgres}:${DB_PORT:5432}/${DB_NAME:brand_management}
+    username: ${DB_USERNAME:brand_management}
+    password: ${DB_PASSWORD:brand_management}
+
+app:
+  seed:
+    enabled: ${APP_SEED_ENABLED:true}

@@ -11,6 +11,7 @@ node_modules
 dist
 dist-ssr
 *.local
+BE/brand_management/uploads/
 
 # Editor directories and files
 .vscode/*
@@ -25,3 +26,4 @@ dist-ssr
 
 # OS generated files
 .omx
+.backend-git-backup/
