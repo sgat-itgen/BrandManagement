@@ -84,13 +84,11 @@ jobs:
       - name: Trigger Render deployment
         env:
           RENDER_DEPLOY_HOOK_URL: ${{ secrets.RENDER_DEPLOY_HOOK_URL }}
-          IMAGE_URL: docker.io/${{ secrets.DOCKERHUB_USERNAME }}/brand-management-backend:sha-${{ github.sha }}
         run: |
           test -n "$RENDER_DEPLOY_HOOK_URL" || {
             echo "RENDER_DEPLOY_HOOK_URL is not configured"
             exit 1
           }
 
-          encoded_image=$(printf '%s' "$IMAGE_URL" | sed 's#/#%2F#g; s#:#%3A#g')
           curl --fail --show-error --silent --request POST \
-            "${RENDER_DEPLOY_HOOK_URL}&imgURL=${encoded_image}"
+            "$RENDER_DEPLOY_HOOK_URL"
