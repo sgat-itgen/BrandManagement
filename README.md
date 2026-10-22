@@ -4,6 +4,10 @@ Brand Management is a full-stack internal application for managing the trademark
 
 The repository contains a React frontend and a Spring Boot backend. The frontend is the operational dashboard; the backend is the source of truth for authentication, authorization, persistence, and file metadata.
 
+<div align="center">
+  <img src=".github/images/homepage_screenshot_brandmanagement.png" alt="Homepage Screenshot" width="600">
+</div>
+
 ## Current scope
 
 Implemented capabilities include:
